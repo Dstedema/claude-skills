@@ -21,11 +21,16 @@ The vault is a SharePoint teamsite folder, surfaced two ways — **pick by
 platform**:
 
 - **Windows (PRIMARY) — local OneDrive-synced path:**
-  `C:\Users\dennis.stedema\OneDrive - BeBo Vloeren\ai-development - claude-memory`
-  This is an "Add shortcut to OneDrive" of the SharePoint folder, synced to
-  disk. Read/write it with the normal file tools (Read/Write/Edit/Glob) — the
-  OneDrive client syncs changes up to SharePoint automatically. No connector,
-  no search index, no `driveId` needed. Prefer this whenever the path exists.
+  `%OneDriveCommercial%\ai-development - claude-memory`
+  (PowerShell: `$env:OneDriveCommercial`; expands per-user, e.g. Dennis =
+  `C:\Users\dennis.stedema\OneDrive - BeBo Vloeren\...`). **Do not hardcode a
+  username** — always resolve the env var so the path works for any user who
+  has the shortcut synced. If `%OneDriveCommercial%` is empty, fall back to
+  `%OneDrive%`, else `%USERPROFILE%\OneDrive - BeBo Vloeren`. This is an "Add
+  shortcut to OneDrive" of the SharePoint folder, synced to disk. Read/write it
+  with the normal file tools (Read/Write/Edit/Glob) — the OneDrive client syncs
+  changes up to SharePoint automatically. No connector, no search index, no
+  `driveId` needed. Prefer this whenever the path resolves and exists.
 - **Linux / macOS / no local sync — Microsoft 365 connector:**
   Site `ai-development`, library `Gedeelde documenten`, folder `claude-memory`
   (https://hn5ad06de859a14.sharepoint.com/sites/ai-development/Gedeelde%20documenten/claude-memory).
@@ -44,7 +49,7 @@ platform**:
      nothing from the vault yet, say so and retry later — don't fabricate.
 
 **Keep the existing vault structure** — this mirrors Dennis' local Obsidian
-vault at `C:\Users\dennis.stedema\Documents\vault`. Do NOT invent a new layout;
+vault at `%USERPROFILE%\Documents\vault`. Do NOT invent a new layout;
 replicate this tree and add to it in the same shape:
 
 ```
@@ -129,7 +134,7 @@ reshape it. It is idempotent-ish: re-running skips notes already present unless
 content changed.
 
 **Sources to sweep (in priority order):**
-1. Local vault — `C:\Users\dennis.stedema\Documents\vault` (the primary source;
+1. Local vault — `%USERPROFILE%\Documents\vault` (the primary source;
    already has the canonical structure above).
 2. Local auto-memory — `~/.claude/projects/<project>/memory/*.md`. Fold these
    into the vault structure: `type: project` → the matching project's
