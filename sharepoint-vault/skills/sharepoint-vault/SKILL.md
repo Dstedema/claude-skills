@@ -133,9 +133,14 @@ verbatim** — same folders, same relative paths, same filenames. Do not
 reshape it. It is idempotent-ish: re-running skips notes already present unless
 content changed.
 
+**Before anything: ASK for the source vault path.** Do not assume a location.
+Ask Dennis where the source vault lives, offering `%USERPROFILE%\Documents\vault`
+as the likely default, and use whatever he confirms. Only proceed once you have
+an explicit path.
+
 **Sources to sweep (in priority order):**
-1. Local vault — `%USERPROFILE%\Documents\vault` (the primary source;
-   already has the canonical structure above).
+1. Local vault — the path Dennis just gave (default suggestion
+   `%USERPROFILE%\Documents\vault`; already has the canonical structure above).
 2. Local auto-memory — `~/.claude/projects/<project>/memory/*.md`. Fold these
    into the vault structure: `type: project` → the matching project's
    `architecture/` or a project note; `feedback`/instructions → root/project
@@ -143,7 +148,8 @@ content changed.
 3. Session artifacts — notes/decisions/logs produced this session not yet saved.
 
 **Procedure:**
-1. On Windows: `robocopy "<vault>" "<synced-folder>" /E /XD .obsidian` copies the
+0. Confirm the source vault path with Dennis (see above) before touching files.
+1. On Windows: `robocopy "<source-vault>" "<synced-folder>" /E /XD .obsidian` copies the
    whole tree, structure preserved, in one shot. Elsewhere, resolve the vault
    root via the connector and recreate each file's relative path (create missing
    folders per level; treat "already exists" as success). Abort with a clear
