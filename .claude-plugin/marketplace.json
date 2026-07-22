@@ -1,0 +1,18 @@
+{
+  "name": "jarvis",
+  "owner": {
+    "name": "Dennis Stedema",
+    "email": "dennis.stedema@bebovloeren.nl"
+  },
+  "metadata": {
+    "description": "Dennis' personal JARVIS plugins for Claude Code — second brain, BC workflow helpers.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "sharepoint-vault",
+      "source": "./sharepoint-vault",
+      "description": "Read/write the SharePoint-hosted second brain vault; works on Windows (OneDrive sync) and Linux (M365 connector)."
+    }
+  ]
+}
