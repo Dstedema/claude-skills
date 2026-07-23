@@ -6,8 +6,9 @@ machine from this repo; updates arrive via `git pull` + `/plugin update`.
 ## Plugins
 
 - **sharepoint-vault** — read/write the SharePoint-hosted second brain vault.
-  Windows uses the local OneDrive-synced folder; Linux/macOS use the Microsoft
-  365 connector. Ships hooks that enforce two rules: **vault-first** (consult the
+  Windows and WSL use the local OneDrive-synced folder (WSL via
+  `/mnt/c/Users/*/OneDrive - BeBo Vloeren/...`); pure Linux/macOS use the
+  Microsoft 365 connector. Ships hooks that enforce two rules: **vault-first** (consult the
   vault at session start, before working) and **update-the-vault after every
   git commit**. Hooks run `node` and inject a reminder into context; they need
   the plugin installed on a real Claude Code CLI (they don't fire in the Agent
