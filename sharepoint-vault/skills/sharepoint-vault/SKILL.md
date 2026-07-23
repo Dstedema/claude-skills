@@ -31,7 +31,16 @@ platform**:
   with the normal file tools (Read/Write/Edit/Glob) — the OneDrive client syncs
   changes up to SharePoint automatically. No connector, no search index, no
   `driveId` needed. Prefer this whenever the path resolves and exists.
-- **Linux / macOS / no local sync — Microsoft 365 connector:**
+- **WSL (Windows Subsystem for Linux) — mounted OneDrive path:** the Windows
+  OneDrive folder is visible from Linux under `/mnt/c/Users/<user>/`. Resolve it
+  as `/mnt/c/Users/*/OneDrive - BeBo Vloeren/ai-development - claude-memory`
+  (glob the `OneDrive*` folder — the exact name may be localized/renamed) and
+  confirm the root by the presence of `CLAUDE.md`. **Do not hardcode the
+  username.** Treat this exactly like the Windows local path: read/write with the
+  normal file tools (Read/Write/Edit/Glob) — the Windows OneDrive client syncs it
+  up. **Prefer this over the connector on WSL**; only fall back to the connector
+  if no `/mnt/c/...` copy exists.
+- **Pure Linux / macOS / no local sync — Microsoft 365 connector:**
   Site `ai-development`, library `Gedeelde documenten`, folder `claude-memory`
   (https://hn5ad06de859a14.sharepoint.com/sites/ai-development/Gedeelde%20documenten/claude-memory).
   Two gotchas learned the hard way:
@@ -90,17 +99,19 @@ in `templates/`. Do not migrate `.obsidian/` (per-machine app config).
 These are deferred tools — load their schemas with ToolSearch
 (`select:mcp__claude_ai_Microsoft_365__sharepoint_search,...`) before calling.
 
-## Read workflow (Windows primary = local path)
+## Read workflow (Windows + WSL primary = local path)
 
 1. Glob/Grep/Read under the local vault root above (e.g. `**/*.md`, or a
-   project subfolder like `bebo/`).
+   project subfolder like `bebo/`). On WSL this is the `/mnt/c/Users/*/OneDrive
+   - BeBo Vloeren/ai-development - claude-memory` path.
 2. Answer from what you actually read — never invent vault content.
-3. Connector path (Linux etc.): `sharepoint_search` → `read_resource` on the
-   real file URI (see the gotchas above).
+3. Connector path (pure Linux/macOS, no mounted OneDrive): `sharepoint_search` →
+   `read_resource` on the real file URI (see the gotchas above).
 
-## Write workflow (Windows primary = local path)
+## Write workflow (Windows + WSL primary = local path)
 
-1. Write/Edit the file directly under the local vault root; OneDrive syncs it up.
+1. Write/Edit the file directly under the local vault root (Windows path, or the
+   WSL `/mnt/c/Users/*/OneDrive - BeBo Vloeren/...` path); OneDrive syncs it up.
 2. Place notes by type/project (architecture → `architecture/`, decision →
    `Decisions/`, session log → `logs/YYYY-MM-DD-HHmm-<slug>.md`), following the
    `templates/` shapes.

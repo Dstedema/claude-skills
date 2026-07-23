@@ -12,7 +12,7 @@
     {
       "name": "sharepoint-vault",
       "source": "./sharepoint-vault",
-      "description": "Read/write the SharePoint-hosted second brain vault; works on Windows (OneDrive sync) and Linux (M365 connector)."
+      "description": "Read/write the SharePoint-hosted second brain vault; works on Windows + WSL (OneDrive sync) and pure Linux/macOS (M365 connector)."
     }
   ]
 }
