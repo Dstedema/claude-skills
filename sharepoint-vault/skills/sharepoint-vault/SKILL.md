@@ -122,9 +122,32 @@ already have one.
 
 `CLAUDE.md` at the vault root holds vault-wide standing instructions; each
 project may also have its own `CLAUDE.md` / `Claude.md` / `README.md` /
-`Index.md`. When starting substantive work, read the root `CLAUDE.md` and the
-relevant project's entry note. Treat them as authoritative user guidance, second
-only to what Dennis says in the live conversation.
+`Index.md`. Treat them as authoritative user guidance, second only to what
+Dennis says in the live conversation.
+
+**Two mandatory behaviours (from the vault root `CLAUDE.md` — enforce them):**
+
+1. **Vault-first — consult the vault BEFORE thinking or working.** At the start
+   of any substantive task, first read this skill's target: the root `CLAUDE.md`,
+   the relevant `<project>/Index.md` + `<project>/architecture/`, and the most
+   recent `<project>/logs/` (or global `logs/`). Only then plan, propose, or
+   write code. Don't work from assumptions — if it's not in the vault or the
+   code, ask.
+2. **After EVERY commit — update the vault.** Following a successful
+   `git commit`, before moving on: add a session-log entry in
+   `<project>/logs/YYYY-MM-DD-HHMM-<slug>.md` (commit hash + summary + decisions
+   + open items) and update any affected `architecture/` / `Decisions/` /
+   `Mistakes/` notes with wikilinks.
+
+## Architecture (single working copy — option B)
+
+The SharePoint-synced folder is the ONE working copy. On Dennis' Windows machine
+`%USERPROFILE%\Documents\vault` is a **junction** to
+`%OneDriveCommercial%\ai-development - claude-memory`, so Obsidian and Claude
+both edit the same SharePoint-backed files; OneDrive syncs to the teamsite
+continuously. There is no separate local vault to reconcile. (A one-time backup
+of the pre-junction vault may exist as `Documents\vault-local-backup-<stamp>` —
+leave it untouched unless Dennis asks.)
 
 ## Migrating local → SharePoint
 
