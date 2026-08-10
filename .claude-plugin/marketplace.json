@@ -13,6 +13,11 @@
       "name": "sharepoint-vault",
       "source": "./sharepoint-vault",
       "description": "Read/write the SharePoint-hosted second brain vault; works on Windows (OneDrive sync) and Linux (M365 connector)."
+    },
+    {
+      "name": "bebo-docs",
+      "source": "./bebo-docs",
+      "description": "Convert Markdown into Bebo-huisstijl HTML + PDF deliverables, and lay out FO/TO documents per Bebo's internal standard."
     }
   ]
 }
