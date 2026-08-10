@@ -1,0 +1,10 @@
+{
+  "name": "bebo-docs",
+  "description": "Turn Markdown into Bebo-huisstijl HTML + PDF deliverables (title page, numbered chapters, styled tables), and lay out functioneel/technisch ontwerpen according to Bebo's internal FO 1.0 / FO 2.0 standard.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Dennis Stedema",
+    "email": "dennis.stedema@bebovloeren.nl"
+  },
+  "keywords": ["bebo", "huisstijl", "pdf", "functioneel-ontwerp", "markdown"]
+}

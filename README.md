@@ -13,6 +13,12 @@ machine from this repo; updates arrive via `git pull` + `/plugin update`.
   git commit**. Hooks run `node` and inject a reminder into context; they need
   the plugin installed on a real Claude Code CLI (they don't fire in the Agent
   SDK environment, which has no plugin support).
+- **bebo-docs** — turn a Markdown file into a Bebo-huisstijl `.html` + `.pdf`
+  (red `#E30613` title page, numbered chapters, styled tables) with
+  `node scripts/build-bebo-pdf.mjs <doc.md>`. Node only, no dependencies; the
+  PDF renders via headless Edge or Chrome. Also carries the document standard:
+  the GAC-compatible FO layout and Bebo's internal **FO 1.0 / FO 2.0** pro
+  forma, plus an empty FO template.
 
 ## Install (per machine)
 
@@ -44,5 +50,11 @@ jarvis-plugins/
   sharepoint-vault/                   # a plugin
     .claude-plugin/plugin.json        # plugin manifest
     skills/sharepoint-vault/SKILL.md  # the skill
+  bebo-docs/
+    .claude-plugin/plugin.json
+    skills/bebo-docs/SKILL.md
+    skills/bebo-docs/scripts/         # build-bebo-pdf.mjs
+    skills/bebo-docs/assets/          # bebo-logo.png
+    skills/bebo-docs/templates/       # functioneel-ontwerp.md
   README.md
 ```
