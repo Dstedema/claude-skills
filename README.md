@@ -1,4 +1,4 @@
-# JARVIS plugins
+# CLaude plugins
 
 Personal Claude Code plugin marketplace for Dennis Stedema. Install once per
 machine from this repo; updates arrive via `git pull` + `/plugin update`.
