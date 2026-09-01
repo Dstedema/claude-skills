@@ -290,8 +290,19 @@ def run_batch(tasks, shared_context=None, model=None, system=None,
         except Exception as e:
             return {"ok": False, "task": task, "error": str(e)}
 
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        results = list(pool.map(one, tasks))
+    if workers > 1:
+        try:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                results = list(pool.map(one, tasks))
+        except RuntimeError:
+            # Interpreter already shutting down (stdin closed mid-call): no new
+            # threads can be started, so finish the work serially rather than
+            # losing it.
+            log("thread pool unavailable, running batch serially")
+            workers = 1
+            results = [one(t) for t in tasks]
+    else:
+        results = [one(t) for t in tasks]
 
     return {"model": model_id, "concurrency": workers, "warmed": warmed,
             "succeeded": sum(1 for r in results if r["ok"]),
@@ -787,6 +798,11 @@ def main():
                     entry["event"].set()
             continue
         pool.submit(serve, msg)
+
+    # stdin closed. Let in-flight calls finish before returning: otherwise the
+    # interpreter starts tearing down while a handler is still working, and any
+    # nested pool (worker_batch) fails with "cannot schedule new futures".
+    pool.shutdown(wait=True)
 
 
 if __name__ == "__main__":
