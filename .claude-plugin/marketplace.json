@@ -18,6 +18,11 @@
       "name": "bebo-docs",
       "source": "./bebo-docs",
       "description": "Convert Markdown into Bebo-huisstijl HTML + PDF deliverables, and lay out FO/TO documents per Bebo's internal standard."
+    },
+    {
+      "name": "lmstudio-workers",
+      "source": "./lmstudio-workers",
+      "description": "Delegate bulk sub-tasks to a local LM Studio model over MCP; Claude orchestrates, your own hardware does the mechanical text work."
     }
   ]
 }

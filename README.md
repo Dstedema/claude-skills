@@ -19,6 +19,14 @@ machine from this repo; updates arrive via `git pull` + `/plugin update`.
   PDF renders via headless Edge or Chrome. Also carries the document standard:
   the GAC-compatible FO layout and Bebo's internal **FO 1.0 / FO 2.0** pro
   forma, plus an empty FO template.
+- **lmstudio-workers** — use a local [LM Studio](https://lmstudio.ai) model as a
+  worker pool. Claude stays the orchestrator (tools, files, judgment) and fans
+  mechanical text work — summarize these N files, extract fields, classify a
+  list, draft boilerplate — out to your own hardware via `worker_batch`, instead
+  of spending context or cloud subagents. Ships a stdlib-only Python MCP server
+  (no npm, no pip, no venv) that adapts MCP to LM Studio's OpenAI-compatible
+  API. Requires LM Studio's local server running and one instruct/chat model
+  downloaded.
 
 ## Install (per machine)
 
@@ -56,5 +64,10 @@ jarvis-plugins/
     skills/bebo-docs/scripts/         # build-bebo-pdf.mjs
     skills/bebo-docs/assets/          # bebo-logo.png
     skills/bebo-docs/templates/       # functioneel-ontwerp.md
+  lmstudio-workers/
+    .claude-plugin/plugin.json
+    .mcp.json                         # registers the MCP server via ${CLAUDE_PLUGIN_ROOT}
+    server/lmstudio_worker.py         # stdlib-only MCP stdio server
+    skills/lmstudio-workers/SKILL.md
   README.md
 ```

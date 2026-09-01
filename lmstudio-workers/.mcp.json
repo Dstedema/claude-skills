@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "lmstudio-workers": {
+      "command": "python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/lmstudio_worker.py"],
+      "env": {
+        "LMSTUDIO_BASE_URL": "${LMSTUDIO_BASE_URL:-http://localhost:1234}",
+        "LMSTUDIO_MAX_CONCURRENCY": "${LMSTUDIO_MAX_CONCURRENCY:-4}",
+        "LMSTUDIO_TIMEOUT": "${LMSTUDIO_TIMEOUT:-600}"
+      }
+    }
+  }
+}
