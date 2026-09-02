@@ -1,0 +1,17 @@
+[Desktop Entry]
+# Autostart LM Studio at login so its built-in server is always up on
+# 127.0.0.1:1234 without anyone having to click anything.
+#
+# LM Studio starts the server itself: .lmstudio/.internal/http-server-config.json
+# has "autoStartOnLaunch": true. Closing the window leaves it in the tray with
+# the server running; quitting from the tray stops it.
+Type=Application
+Name=LM Studio (local inference server)
+Comment=Starts LM Studio so its local server serves 127.0.0.1:1234
+Exec=/opt/LM-Studio/lm-studio
+Icon=lm-studio
+Terminal=false
+X-GNOME-Autostart-enabled=true
+# Give the desktop a moment to settle first; the app is heavy to start.
+X-GNOME-Autostart-Delay=15
+NoDisplay=false

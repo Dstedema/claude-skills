@@ -1,0 +1,89 @@
+#!/bin/bash
+# Give every human account access to the shared LM Studio library, and seed the
+# autostart entry, without anyone re-running an installer.
+#
+# Runs from a systemd timer. Idempotent and quiet when there is nothing to do.
+# Needed because /etc/adduser.conf's EXTRA_GROUPS only covers accounts created
+# with `adduser`; the GNOME Users panel goes through accountsservice -> useradd
+# and bypasses it entirely.
+set -euo pipefail
+
+GROUP="${LMSTUDIO_GROUP:-lmstudio}"
+MODELS="${LMSTUDIO_MODELS:-/srv/lmstudio/models}"
+AUTOSTART_SRC="${LMSTUDIO_AUTOSTART:-/etc/skel/.config/autostart/lm-studio-server.desktop}"
+AUTOSTART_NAME=lm-studio-server.desktop
+MIN_UID=1000
+MAX_UID=65533
+
+getent group "$GROUP" >/dev/null || { echo "group $GROUP missing; nothing to do"; exit 0; }
+[ -d "$MODELS" ] || { echo "$MODELS missing; nothing to do"; exit 0; }
+
+changed=0
+while IFS=: read -r name _pw uid _gid _gecos home shell; do
+    case "$uid" in ''|*[!0-9]*) continue ;; esac
+    [ "$uid" -ge "$MIN_UID" ] && [ "$uid" -le "$MAX_UID" ] || continue
+    case "$shell" in */nologin|*/false) continue ;; esac
+    [ -d "$home" ] || continue
+
+    if ! id -nG "$name" 2>/dev/null | tr ' ' '\n' | grep -qx "$GROUP"; then
+        usermod -aG "$GROUP" "$name" && changed=1
+        echo "added $name to group $GROUP (applies at their next login)"
+    fi
+
+    if [ -n "$AUTOSTART_SRC" ] && [ -f "$AUTOSTART_SRC" ] \
+       && [ ! -f "$home/.config/autostart/$AUTOSTART_NAME" ]; then
+        install -d -o "$name" -g "$name" -m 0755 "$home/.config" "$home/.config/autostart"
+        install -o "$name" -g "$name" -m 0644 "$AUTOSTART_SRC" \
+                "$home/.config/autostart/$AUTOSTART_NAME"
+        changed=1
+        echo "seeded autostart for $name"
+    fi
+
+    lm="$home/.lmstudio"
+    [ -d "$lm" ] || continue          # they have not run LM Studio yet
+
+    # Point their model folder at the shared library, moving anything they had
+    # into it rather than orphaning it.
+    if [ ! -L "$lm/models" ]; then
+        if [ -d "$lm/models" ]; then
+            shopt -s dotglob nullglob
+            e=("$lm/models"/*)
+            [ ${#e[@]} -gt 0 ] && mv -n "${e[@]}" "$MODELS"/ 2>/dev/null || true
+            shopt -u dotglob nullglob
+            rmdir "$lm/models" 2>/dev/null || true
+        fi
+        if [ ! -e "$lm/models" ]; then
+            ln -s "$MODELS" "$lm/models" && chown -h "$name:$name" "$lm/models"
+            changed=1
+            echo "linked $name's model folder to the shared library"
+        fi
+    fi
+
+    before="$(cat "$lm/settings.json" 2>/dev/null || echo '')"
+    python3 - "$lm/settings.json" "$MODELS" <<'PY'
+import json, os, sys
+path, models = sys.argv[1], sys.argv[2]
+try:
+    d = json.load(open(path)) if os.path.exists(path) else {}
+except (ValueError, OSError):
+    d = {}
+if d.get("downloadsFolder") != models:
+    d["downloadsFolder"] = models
+    json.dump(d, open(path, "w"), indent=2)
+PY
+    chown "$name:$name" "$lm/settings.json" 2>/dev/null || true
+    if [ "$(cat "$lm/settings.json" 2>/dev/null)" != "$before" ]; then
+        changed=1
+        echo "pointed $name's downloadsFolder at the shared library"
+    fi
+done < <(getent passwd)
+
+# Keep permissions correct for whatever landed in the library since last run.
+chgrp -R "$GROUP" "$MODELS" 2>/dev/null || true
+chmod -R g+rwX "$MODELS" 2>/dev/null || true
+find "$MODELS" -type d -exec chmod g+s {} + 2>/dev/null || true
+command -v setfacl >/dev/null && \
+    setfacl -R -m "g:$GROUP:rwX" -m "d:g:$GROUP:rwX" "$MODELS" 2>/dev/null || true
+
+[ "$changed" -eq 0 ] && echo "nothing to change" || true
+exit 0

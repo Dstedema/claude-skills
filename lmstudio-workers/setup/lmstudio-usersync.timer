@@ -1,0 +1,13 @@
+[Unit]
+Description=Periodically sync new accounts into the shared LM Studio library
+
+[Timer]
+# Catch accounts created since boot (the GNOME Users panel bypasses
+# adduser.conf), then keep checking hourly. Persistent so a machine that was
+# off still runs the missed check on the next boot.
+OnBootSec=2min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

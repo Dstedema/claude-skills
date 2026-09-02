@@ -1,0 +1,9 @@
+[Unit]
+Description=Grant every human account access to the shared LM Studio library
+After=local-fs.target
+
+[Service]
+Type=oneshot
+Environment=LMSTUDIO_MODELS=@MODELS@
+Environment=LMSTUDIO_GROUP=@GROUP@
+ExecStart=/usr/local/bin/lmstudio-usersync
