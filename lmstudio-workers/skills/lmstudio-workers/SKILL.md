@@ -88,8 +88,11 @@ All optional, all environment variables — no paths are baked in:
 
 ## Troubleshooting
 
-- **"Cannot reach LM Studio"** — its local server is off. `lms server start`,
-  or LM Studio's Developer tab → Start Server.
+- **"Cannot reach LM Studio"** — its local server is off. Easiest: open the
+  LM Studio app, which starts its server itself when `autoStartOnLaunch` is set,
+  or right-click its tray icon → Start Server. From a shell: `lms server start
+  --port 1234`. The app must be running (or its background service awake); the
+  CLI only signals an already-running backend.
 - **"No chat-capable model"** — only embedding models are installed. The user
   must download an instruct/coder model; ask which one rather than picking and
   downloading tens of GB on their behalf.

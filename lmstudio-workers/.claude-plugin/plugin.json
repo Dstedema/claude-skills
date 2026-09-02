@@ -1,7 +1,7 @@
 {
   "name": "lmstudio-workers",
   "description": "Delegate work to a local LM Studio model over MCP - Claude orchestrates, the local model executes. Text fan-out plus an agentic worker with its own sandboxed read/grep tools and permission-gated write/edit/shell.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {
     "name": "Dennis Stedema",
     "email": "dennis.stedema@bebovloeren.nl"

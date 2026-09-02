@@ -35,7 +35,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 PROTOCOL_VERSION = "2025-06-18"
-SERVER_INFO = {"name": "lmstudio-workers", "version": "0.2.0"}
+SERVER_INFO = {"name": "lmstudio-workers", "version": "0.2.2"}
 
 BASE_URL = os.environ.get("LMSTUDIO_BASE_URL", "http://localhost:1234").rstrip("/")
 PINNED_MODEL = os.environ.get("LMSTUDIO_WORKER_MODEL") or None
@@ -161,7 +161,8 @@ def _http(method, path, payload=None, timeout=None, retries=RETRIES):
         except urllib.error.URLError as e:
             raise WorkerError(
                 "Cannot reach LM Studio at %s (%s). Start its local server "
-                "(Developer tab -> Start Server, or `lms server start`)." % (BASE_URL, e.reason)
+                "(open the LM Studio app, use its tray icon -> Start Server, or run "
+                "`lms server start --port 1234`)." % (BASE_URL, e.reason)
             )
         except json.JSONDecodeError:
             raise WorkerError("LM Studio sent a non-JSON response for %s." % path)

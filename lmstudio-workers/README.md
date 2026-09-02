@@ -17,7 +17,8 @@ This plugin is the missing adapter: a tiny MCP server that translates
 ## Requirements
 
 - Python 3.9+ on `PATH` as `python3` (stdlib only — nothing to install)
-- LM Studio with its local server running (`lms server start`)
+- LM Studio running with its local server on (it autostarts the server when
+  `autoStartOnLaunch` is set; otherwise use the tray icon or `lms server start`)
 - At least one **instruct/chat** model downloaded. Embedding models cannot run
   worker tasks.
 
