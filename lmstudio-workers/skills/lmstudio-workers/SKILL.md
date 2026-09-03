@@ -100,6 +100,18 @@ All optional, all environment variables — no paths are baked in:
   JIT-loading. The server already warms the model and retries; a cold 30B load
   simply takes a while.
 - **Empty worker output** — a reasoning model spent the budget thinking. Raise
-  `max_tokens`; the result header flags this case.
+  `max_tokens`; the result header flags this case. Gemma-class models can burn
+  40+ tokens reasoning before a one-word answer, so never give them a tiny cap.
+- **Output is repeated junk tokens** (`<unused49>`, `<|...|>`, one token over and
+  over) — the model is not confused, its compute is broken. Almost always a
+  forced GPU offload: if `n_gpu_layers` is pinned, llama.cpp skips fitting the
+  model to available device memory and loads anyway. Check the server log for
+  `failed to fit params to free device memory: n_gpu_layers already set by user`,
+  then reload with automatic offload (`lms load <model>` with no `--gpu`, or set
+  GPU offload back to Auto in the app). A ratio like `--gpu 0.9` is safer than
+  `max` on APUs, whose drivers report a smaller heap than is really available.
+- **`failed to mlock ... Cannot allocate memory`** — "keep model in memory" hit
+  the `memlock` ulimit. Harmless: llama.cpp continues without locking. Raise it
+  in `/etc/security/limits.conf` only if you actually want the lock.
 - **`worker_agent` refuses to write** — the client offered no elicitation
   capability, so there is no way to ask permission. Check `worker_models`.
