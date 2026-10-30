@@ -32,12 +32,25 @@ weinig waard.
 ## Werkwijze per ticket
 
 1. **Lees het hele ticket**: omschrijving, alle reacties, status, melder,
-   aanmaakdatum. Bij een nieuwe reactie: lees wat er daarvóór gezegd is, zodat
-   je reageert op de stand van zaken en niet op het begin.
+   aanmaakdatum, en het **aanvraagtype** (veld "Request Type"). Bij een nieuwe
+   reactie: lees wat er daarvóór gezegd is, zodat je reageert op de stand van
+   zaken en niet op het begin.
+   **Lees ook de formulieren.** Portaalaanvragen hebben vaak een lege
+   omschrijving: alles staat dan in een formulier. Roep voor elk ticket met
+   een lege of korte omschrijving, of met "Totaal aantal formulieren" > 0,
+   `get_issue_forms` aan (dagtaken-plugin, server `jira-forms`). Oordeel
+   **nooit** "Info nodig" over een ticket waarvan je de formulieren niet hebt
+   gelezen. Een melder vragen naar iets wat al in het formulier staat, is het
+   ergste wat deze triage kan doen. Noem bij elk oordeel kort wat er in het
+   formulier staat, inclusief **data en tijden**. Een gevraagde wijziging
+   "vandaag 15:00" is urgent; zet dat bovenaan.
 2. **Wie is de melder?** Zoek de melder op met de Microsoft 365-connector
    (`search_people` op naam of mailadres) voor **afdeling en functie**. Dat heb
    je nodig voor rechtenverzoeken en om de reactie op het juiste niveau te
-   schrijven. Lukt het niet, zeg dat dan in je oordeel.
+   schrijven. Geeft `search_people` een fout (bijv. ontbrekend recht
+   `People.Read`), zoek dan een mail van de melder (`outlook_email_search`
+   op het mailadres) en haal functie en afdeling uit de handtekening. Lukt
+   ook dat niet, zeg het dan in je oordeel.
 3. **Zoek context in de vault** voordat je oordeelt. Lokaal staat hij in
    `/home/dennis/vault` (op een machine zonder lokale kopie: gebruik de
    `sharepoint-vault`-skill). Relevante plekken:
