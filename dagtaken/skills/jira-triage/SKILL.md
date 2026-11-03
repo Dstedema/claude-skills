@@ -50,7 +50,11 @@ weinig waard.
    schrijven. Geeft `search_people` een fout (bijv. ontbrekend recht
    `People.Read`), zoek dan een mail van de melder (`outlook_email_search`
    op het mailadres) en haal functie en afdeling uit de handtekening. Lukt
-   ook dat niet, zeg het dan in je oordeel.
+   ook dat niet, laat functie of afdeling dan weg. Schrijf in de uitvoer
+   nooit hoe je ze gevonden hebt of wat er ontbreekt (dus niet "functie via
+   search_people" of "afdeling niet beschikbaar"): Dennis wil alleen het
+   resultaat zien. Bij een rechtenverzoek zonder bekende functie is het advies
+   **navragen**.
 3. **Zoek context in de vault** voordat je oordeelt. Lokaal staat hij in
    `/home/dennis/vault` (op een machine zonder lokale kopie: gebruik de
    `sharepoint-vault`-skill). Relevante plekken:
@@ -109,6 +113,15 @@ Dennis het in één keer kan uitvoeren of afwijzen.
 - Beloof niets wat Dennis niet heeft besloten (geen "ik zet het recht voor je
   aan" bij een rechtenverzoek waarover hij nog moet beslissen).
 - Geen interne overwegingen in de reactie: die horen in je oordeel voor Dennis.
+- **Tag wie je een vraag stelt**, zodat die persoon een melding van Jira
+  krijgt. Dat is meestal de melder, maar het kan ook een collega zijn die in
+  het ticket genoemd wordt. Schrijf "@Volledige Naam" waar je hem aanspreekt
+  (bijv. "Hoi @Rowin Smit, welke lijn bedoel je?"). Je hebt daarvoor het
+  Jira-accountId nodig. Van de melder en van wie op het ticket reageerde
+  staat het in het ticket (`reporter.accountId`, `author.accountId` bij een
+  reactie). Anders zoek je het op met `lookupJiraAccountId` (op naam of
+  mailadres). Vind je het niet, tag dan niet en spreek de persoon gewoon bij
+  naam aan. Stel je niemand een vraag, dan tag je niemand. Tag Dennis nooit.
 
 ## Uitvoer
 
@@ -117,7 +130,7 @@ Daarna per ticket:
 
 ```markdown
 ### [ITSD-123](https://bebogroep.atlassian.net/browse/ITSD-123) — <samenvatting>
-- **Melder:** <naam>, <functie> (<afdeling>)
+- **Melder:** <naam>, <functie> (<afdeling>) — wat onbekend is laat je weg, zonder toelichting
 - **Wat is er nieuw:** <nieuw ticket / reactie van X op <datum>>
 - **Oordeel:** <Zelf oplossen | Rechtenverzoek | Werk voor Dennis | Info nodig | Geen actie>
 - **Waarom:** <één à twee zinnen, met de vault-notitie of BC-actie waarop je leunt>
@@ -126,5 +139,6 @@ Daarna per ticket:
 
 Wordt deze skill door de JARVIS-controlekamer aangeroepen, dan vraagt die je
 om de conceptreacties ook als machineleesbaar `jarvis-voorstellen`-blok aan het
-eind te zetten. Volg dan dat formaat. In een gewone sessie zet je de
-conceptreactie gewoon onder het ticket, in een citaatblok.
+eind te zetten. Volg dan dat formaat; wie je tagt, zet je daar in "taggen"
+(naam en accountId). In een gewone sessie zet je de conceptreactie gewoon
+onder het ticket, in een citaatblok, met eronder wie er getagd moet worden.
