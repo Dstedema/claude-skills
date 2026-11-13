@@ -20,8 +20,19 @@
 
 import readline from "node:readline";
 
-const BASE =
-  (process.env.TRILIUM_URL || "http://trilium.it.svc.cluster.local").replace(/\/+$/, "").replace(/\/etapi$/, "") + "/etapi";
+/** The ETAPI root from whatever address was filled in: with or without /etapi,
+ *  or pasted from the browser (https://host/#root/abc). */
+function etapiBase(raw) {
+  const trim = (p) => p.replace(/\/+$/, "").replace(/\/etapi$/, "");
+  try {
+    const u = new URL(raw);
+    return u.origin + trim(u.pathname) + "/etapi";
+  } catch {
+    return trim(raw) + "/etapi";
+  }
+}
+
+const BASE = etapiBase(process.env.TRILIUM_URL || "http://trilium.it.svc.cluster.local");
 const TOKEN = process.env.TRILIUM_ETAPI_TOKEN || "";
 const NOTES_DIR = (process.env.JARVIS_NOTES_DIR || "jarvis").replace(/["\\]/g, "").trim() || "jarvis";
 
@@ -108,7 +119,7 @@ async function etapi(method, path, { json, text } = {}) {
     } catch {
       // not JSON: keep the text
     }
-    throw new Error(`Trilium ${res.status}: ${message}`);
+    throw Object.assign(new Error(`Trilium ${res.status}: ${message}`), { status: res.status });
   }
   return raw;
 }
@@ -145,19 +156,30 @@ async function readNote({ noteId: raw }) {
   const head = `# ${note.title}\nnoteId: ${nid}, type: ${note.type}${note.dateModified ? `, gewijzigd ${String(note.dateModified).slice(0, 16)}` : ""}`;
   if (note.type === "image" || note.type === "file") return `${head}\n\n(${note.type}: de inhoud is geen tekst)`;
   const content = await etapi("GET", `/notes/${nid}/content`);
-  const cut = content.length > MAX_CONTENT ? `${content.slice(0, MAX_CONTENT)}\n\n(afgekapt: ${content.length} tekens)` : content;
+  // Writing a cut note back would delete the rest of it.
+  const cut =
+    content.length > MAX_CONTENT
+      ? `${content.slice(0, MAX_CONTENT)}\n\n(afgekapt: de notitie heeft ${content.length} tekens. Werk hem niet bij met update_note: je zou de rest wissen.)`
+      : content;
   return `${head}\n\n${cut}`;
 }
 
 let notesDirNote = null;
 
-/** The note new notes go under: NOTES_DIR at the root, made once when missing. */
+/**
+ * The note new notes go under: NOTES_DIR at the root, made once when missing.
+ * Trilium's search ignores "only under root" and compares titles without case,
+ * so a note with that title deeper in the tree comes back too: only a direct
+ * child of the root counts.
+ */
 function notesDir() {
   if (!notesDirNote) {
-    const params = new URLSearchParams({ search: `note.title = "${NOTES_DIR}"`, ancestorNoteId: "root", ancestorDepth: "eq1", limit: "1" });
+    const params = new URLSearchParams({ search: `note.title = "${NOTES_DIR}"`, limit: "50" });
     notesDirNote = getJson(`/notes?${params}`)
       .then(async (found) => {
-        const hit = found?.results?.[0];
+        const hit = (found?.results ?? []).find(
+          (n) => (n.parentNoteIds ?? []).includes("root") && String(n.title).trim().toLowerCase() === NOTES_DIR.toLowerCase(),
+        );
         if (hit) return hit.noteId;
         const made = JSON.parse(await etapi("POST", "/create-note", { json: { parentNoteId: "root", title: NOTES_DIR, type: "text", content: "" } }));
         return made.note.noteId;
@@ -174,9 +196,19 @@ async function createNote({ title, content, parentNoteId }) {
   const t = String(title ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
   if (!t) throw new UserError("title is empty");
   if (typeof content !== "string") throw new UserError("content must be a string (HTML)");
-  const parent = parentNoteId ? id(parentNoteId, "parentNoteId") : await notesDir();
-  const made = JSON.parse(await etapi("POST", "/create-note", { json: { parentNoteId: parent, title: t, type: "text", content } }));
-  return `Notitie gemaakt: ${made.note.noteId} — ${t} (onder ${parent})`;
+  const create = async (parent) => {
+    const made = JSON.parse(await etapi("POST", "/create-note", { json: { parentNoteId: parent, title: t, type: "text", content } }));
+    return `Notitie gemaakt: ${made.note.noteId} — ${t} (onder ${parent})`;
+  };
+  if (parentNoteId) return create(id(parentNoteId, "parentNoteId"));
+  try {
+    return await create(await notesDir());
+  } catch (err) {
+    // The remembered notes-dir note may have been removed in Trilium since.
+    if (err.status !== 400 && err.status !== 404) throw err;
+    notesDirNote = null;
+    return create(await notesDir());
+  }
 }
 
 async function updateNote({ noteId: raw, content, title }) {
@@ -190,7 +222,14 @@ async function updateNote({ noteId: raw, content, title }) {
     throw new Error(`Geen revisie kunnen bewaren, dus niets gewijzigd: ${err.message}`);
   }
   if (content !== undefined) await etapi("PUT", `/notes/${nid}/content`, { text: content });
-  if (t) await etapi("PATCH", `/notes/${nid}`, { json: { title: t } });
+  if (t) {
+    try {
+      await etapi("PATCH", `/notes/${nid}`, { json: { title: t } });
+    } catch (err) {
+      if (content === undefined) throw err;
+      throw new Error(`De inhoud is vervangen (de vorige versie staat als revisie in Trilium), maar de titel wijzigen mislukte: ${err.message}`);
+    }
+  }
   return `Notitie ${nid} bijgewerkt (de vorige versie staat als revisie in Trilium).`;
 }
 
