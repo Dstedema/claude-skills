@@ -1,7 +1,7 @@
 {
   "name": "sharepoint-vault",
   "description": "Read and write the second brain / instruction vault, so the same vault is the source of truth across every machine: in SharePoint (Windows + WSL via OneDrive sync, pure Linux/macOS via the Microsoft 365 connector) or, by choice, in Trilium Notes.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": {
     "name": "Dennis Stedema",
     "email": "dennis.stedema@bebovloeren.nl"
@@ -40,6 +40,21 @@
       "type": "string",
       "title": "Notitie voor nieuwe notities",
       "description": "Alleen voor trilium: nieuwe notities komen onder de notitie met deze titel in de root. Leeg: jarvis."
+    },
+    "trilium_insecure_tls": {
+      "type": "string",
+      "title": "Trilium-certificaat niet controleren",
+      "description": "Alleen voor trilium: true slaat de controle van het TLS-certificaat over (bijvoorbeeld zolang de ingress nog een tijdelijk certificaat heeft). Leeg of false: wel controleren.",
+      "options": [
+        "false",
+        "true"
+      ],
+      "default": "false"
+    },
+    "jarvis_dir": {
+      "type": "string",
+      "title": "Jarvis-map (AL-indexer)",
+      "description": "Alleen voor trilium: map van een Jarvis-checkout met de AL-indexer (src/tools/code/al) en node_modules. Na een git push in een AL-repo draait de plugin daar `npm run al:index` op de achtergrond, zodat AL Codebases in Trilium bijblijft. Leeg: uit."
     }
   }
 }

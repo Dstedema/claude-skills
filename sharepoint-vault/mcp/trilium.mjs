@@ -48,6 +48,12 @@ function setting(option, env) {
 /** Only with the vault in Trilium does this server offer tools. The choice is
  *  the plugin option alone (its manifest default is sharepoint), as for the hooks. */
 const ON = (process.env.VAULT_OPTION ?? "").trim().toLowerCase() === "trilium";
+// Plugin option trilium_insecure_tls (or TRILIUM_INSECURE_TLS, as JARVIS names it): skip the TLS
+// certificate check, e.g. while the ingress still serves a temporary certificate. Only this server
+// process; Claude Code and the other MCP servers keep checking.
+if (/^(1|true|yes)$/i.test(setting("TRILIUM_INSECURE_TLS_OPTION", "TRILIUM_INSECURE_TLS"))) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
 const BASE = etapiBase(setting("TRILIUM_URL_OPTION", "TRILIUM_URL") || "http://trilium.it.svc.cluster.local");
 const TOKEN = setting("TRILIUM_TOKEN_OPTION", "TRILIUM_ETAPI_TOKEN");
 const NOTES_DIR = setting("NOTES_DIR_OPTION", "JARVIS_NOTES_DIR").replace(/["\\]/g, "").trim() || "jarvis";

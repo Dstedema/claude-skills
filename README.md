@@ -21,7 +21,15 @@ machine from this repo; updates arrive via `git pull` + `/plugin update`.
   the tools say so too), that session falls back to SharePoint and says so.
   Set it once per machine in `/config` (or `/plugin configure
   sharepoint-vault@jarvis`): vault, `trilium_url`, `trilium_token` (kept in
-  Claude Code's secure storage), `notes_dir`. Restart Claude Code after a change.
+  Claude Code's secure storage), `notes_dir`, `trilium_insecure_tls` (true skips
+  the TLS certificate check, only for Trilium, e.g. while the ingress serves a
+  temporary certificate) and `jarvis_dir`. Restart Claude Code after a change.
+  With `jarvis_dir` set to a Jarvis checkout that has the AL indexer
+  (`src/tools/code/al`) and its `node_modules`, a `git push` in a Business
+  Central AL repo (an `app.json` in the root) runs `npm run al:index` there in
+  the background, so the "AL Codebases" tree in Trilium follows the shared code.
+  Log: `~/.cache/sharepoint-vault/al-index-<repo>.log` (Windows:
+  `%LOCALAPPDATA%\sharepoint-vault`).
   In JARVIS, Instellingen → Vault sets these options at every start.
 - **bebo-docs** — turn a Markdown file into a Bebo-huisstijl `.html` + `.pdf`
   (red `#E30613` title page, numbered chapters, styled tables) with

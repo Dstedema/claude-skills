@@ -39,6 +39,12 @@ injected at session start says which one is in use; go by that.
   their notes as children; a session log is a note titled
   `YYYY-MM-DD-HHmm-<slug>` under the project's `logs`. The address and the
   ETAPI token are the settings **trilium_url** and **trilium_token**.
+- **AL Codebases** in Trilium is reference, generated from code: one note per
+  object of each Business Central app, for looking up what is live and how it
+  interacts. Don't write session or decision notes there. After a `git push`
+  in an AL repo, the hook `al-index-on-push.js` reindexes it in the background
+  via the JARVIS indexer (setting **jarvis_dir**); the hook says so, or says
+  why it didn't. If it didn't, run `npm run al:index -- <repo>` in Jarvis.
 - **Trilium can't be reached** (the session-start rule says FALLBACK, or a
   trilium tool says "niet bereikbaar"): use the SharePoint vault as below for
   that session, and tell Dennis that what you read or wrote is in SharePoint,
