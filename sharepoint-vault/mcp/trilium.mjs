@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 /**
  * trilium — a tiny MCP server (stdio, no dependencies) for Dennis' second brain
- * in Trilium Notes, through Trilium's ETAPI. JARVIS uses it when Instellingen →
- * Vault says the vault is in Trilium.
+ * in Trilium Notes, through Trilium's ETAPI. Part of the sharepoint-vault
+ * plugin: it offers its tools only when the plugin's setting "vault" is
+ * trilium. A plugin's server can't be switched off by a setting, so with
+ * sharepoint (the default) it runs with no tools at all.
  *
- * Auth: an ETAPI token (Trilium → Opties → ETAPI) in TRILIUM_ETAPI_TOKEN, sent
- * as the Authorization header. Address from TRILIUM_URL (default: the service
- * inside the cluster's it namespace).
+ * Settings come from the plugin's options (/config, or `claude plugin
+ * configure`), passed in by .mcp.json as *_OPTION; where the address, token
+ * or notes dir is unset, the environment counts (TRILIUM_URL,
+ * TRILIUM_ETAPI_TOKEN, JARVIS_NOTES_DIR). Auth: an ETAPI token (Trilium →
+ * Opties → ETAPI), sent as the Authorization header. When Trilium can't be
+ * reached, a tool says so and points at the SharePoint vault instead.
  *
  * Search, read, create and update; nothing here deletes. New notes go under
- * the note named JARVIS_NOTES_DIR (default "jarvis") at the root, made once
+ * the note named by notes_dir (default "jarvis") at the root, made once
  * when it's missing. Before a note changes, Trilium saves a revision of it;
  * when that fails, nothing is changed. Which agents may create and update is
- * up to JARVIS' tool profiles.
+ * up to whoever runs Claude (JARVIS' tool profiles).
  *
  * Speaks just enough MCP (JSON-RPC 2.0, newline-delimited) for Claude Code:
  * initialize, tools/list, tools/call, ping.
@@ -32,9 +37,20 @@ function etapiBase(raw) {
   }
 }
 
-const BASE = etapiBase(process.env.TRILIUM_URL || "http://trilium.it.svc.cluster.local");
-const TOKEN = process.env.TRILIUM_ETAPI_TOKEN || "";
-const NOTES_DIR = (process.env.JARVIS_NOTES_DIR || "jarvis").replace(/["\\]/g, "").trim() || "jarvis";
+/** A plugin option as .mcp.json passed it; an unset one may arrive empty or
+ *  as the unexpanded "${user_config.…}". Then the environment counts. */
+function setting(option, env) {
+  const v = (process.env[option] ?? "").trim();
+  if (v && !v.startsWith("${")) return v;
+  return (process.env[env] ?? "").trim();
+}
+
+/** Only with the vault in Trilium does this server offer tools. The choice is
+ *  the plugin option alone (its manifest default is sharepoint), as for the hooks. */
+const ON = (process.env.VAULT_OPTION ?? "").trim().toLowerCase() === "trilium";
+const BASE = etapiBase(setting("TRILIUM_URL_OPTION", "TRILIUM_URL") || "http://trilium.it.svc.cluster.local");
+const TOKEN = setting("TRILIUM_TOKEN_OPTION", "TRILIUM_ETAPI_TOKEN");
+const NOTES_DIR = setting("NOTES_DIR_OPTION", "JARVIS_NOTES_DIR").replace(/["\\]/g, "").trim() || "jarvis";
 
 /** Trilium's note ids (EntityId): letters, digits and _. */
 const NOTE_ID = /^[A-Za-z0-9_]{1,32}$/;
@@ -110,7 +126,18 @@ async function etapi(method, path, { json, text } = {}) {
     headers["Content-Type"] = "text/plain; charset=utf-8";
     body = text;
   }
-  const res = await fetch(BASE + path, { method, headers, body, signal: AbortSignal.timeout(20_000) });
+  let res;
+  try {
+    res = await fetch(BASE + path, { method, headers, body, signal: AbortSignal.timeout(20_000) });
+  } catch (err) {
+    // Trilium itself is away: the vault falls back to SharePoint, as at session start.
+    const cause = err?.cause ?? {};
+    const why = err?.name === "TimeoutError" ? "geen antwoord binnen 20 s" : cause.code || cause.errors?.[0]?.code || cause.message || err?.message;
+    throw new Error(
+      `Trilium is niet bereikbaar op ${BASE} (${why}). Val terug op de SharePoint-vault (de sharepoint-vault skill) ` +
+        "en zeg erbij dat wat je las of schreef in SharePoint staat, niet in Trilium.",
+    );
+  }
   const raw = await res.text();
   if (!res.ok) {
     let message = raw.slice(0, 300);
@@ -267,18 +294,18 @@ readline.createInterface({ input: process.stdin }).on("line", async (input) => {
         reply(rid, {});
         return;
       case "tools/list":
-        reply(rid, { tools: TOOLS });
+        reply(rid, { tools: ON ? TOOLS : [] });
         return;
       case "tools/call": {
-        const handler = HANDLERS[params?.name];
+        const handler = ON ? HANDLERS[params?.name] : undefined;
         if (!handler) {
           fail(rid, -32602, `Unknown tool: ${params?.name}`);
           return;
         }
         if (!TOKEN) {
           const text =
-            "Trilium is niet ingesteld: zet het ETAPI-token in JARVIS → Instellingen → Vault (Trilium ETAPI-token). " +
-            "Maak het in Trilium onder Opties → ETAPI.";
+            "Trilium is niet ingesteld: zet het ETAPI-token in de plugin sharepoint-vault (/config, Trilium ETAPI-token) " +
+            "of in JARVIS → Instellingen → Vault. Maak het in Trilium onder Opties → ETAPI.";
           reply(rid, { content: [{ type: "text", text }], isError: true });
           return;
         }

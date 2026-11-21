@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "trilium": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/trilium.mjs"],
+      "env": {
+        "VAULT_OPTION": "${user_config.vault}",
+        "TRILIUM_URL_OPTION": "${user_config.trilium_url}",
+        "TRILIUM_TOKEN_OPTION": "${user_config.trilium_token}",
+        "NOTES_DIR_OPTION": "${user_config.notes_dir}"
+      }
+    }
+  }
+}
