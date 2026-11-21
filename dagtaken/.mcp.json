@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "jira-forms": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/jira-forms.mjs"]
+    },
+    "trilium": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/trilium.mjs"]
+    }
+  }
+}

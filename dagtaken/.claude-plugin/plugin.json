@@ -1,0 +1,10 @@
+{
+  "name": "dagtaken",
+  "description": "Dennis' daily work at Bebo: triage new Jira tickets and comments (can the requester fix it in a Bebo app, is a rights request justified, or is it work for Dennis), watch the Outlook inbox with reply drafts, and check the agenda. Read-and-draft only; nothing goes out without Dennis.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Dennis Stedema",
+    "email": "dennis.stedema@bebovloeren.nl"
+  },
+  "keywords": ["jira", "triage", "outlook", "agenda", "bebo", "servicedesk"]
+}
