@@ -13,6 +13,16 @@ machine from this repo; updates arrive via `git pull` + `/plugin update`.
   git commit**. Hooks run `node` and inject a reminder into context; they need
   the plugin installed on a real Claude Code CLI (they don't fire in the Agent
   SDK environment, which has no plugin support).
+  Its setting **vault** switches between `sharepoint` (the default) and
+  `trilium`: then the vault is Trilium Notes, reached through the plugin's own
+  dependency-free MCP server (`mcp/trilium.mjs`, Trilium's ETAPI: search, read,
+  create, update; nothing deletes), and the hooks and the skill point there.
+  When Trilium doesn't answer (checked at session start and after a commit, 3 s;
+  the tools say so too), that session falls back to SharePoint and says so.
+  Set it once per machine in `/config` (or `/plugin configure
+  sharepoint-vault@jarvis`): vault, `trilium_url`, `trilium_token` (kept in
+  Claude Code's secure storage), `notes_dir`. Restart Claude Code after a change.
+  In JARVIS, Instellingen → Vault sets these options at every start.
 - **bebo-docs** — turn a Markdown file into a Bebo-huisstijl `.html` + `.pdf`
   (red `#E30613` title page, numbered chapters, styled tables) with
   `node scripts/build-bebo-pdf.mjs <doc.md>`. Node only, no dependencies; the
@@ -56,7 +66,10 @@ git -C <repo> pull
 jarvis-plugins/
   .claude-plugin/marketplace.json     # marketplace manifest (lists plugins)
   sharepoint-vault/                   # a plugin
-    .claude-plugin/plugin.json        # plugin manifest
+    .claude-plugin/plugin.json        # plugin manifest, with its settings (userConfig)
+    .mcp.json                         # the trilium server, fed by those settings
+    hooks/                            # vault-first + after-commit rules
+    mcp/trilium.mjs                   # Trilium ETAPI as MCP tools
     skills/sharepoint-vault/SKILL.md  # the skill
   bebo-docs/
     .claude-plugin/plugin.json

@@ -1,10 +1,45 @@
 {
   "name": "sharepoint-vault",
-  "description": "Read and write the SharePoint-hosted second brain / instruction vault, so the same vault is the source of truth across every machine (Windows + WSL via OneDrive sync, pure Linux/macOS via the Microsoft 365 connector).",
-  "version": "0.3.0",
+  "description": "Read and write the second brain / instruction vault, so the same vault is the source of truth across every machine: in SharePoint (Windows + WSL via OneDrive sync, pure Linux/macOS via the Microsoft 365 connector) or, by choice, in Trilium Notes.",
+  "version": "0.4.0",
   "author": {
     "name": "Dennis Stedema",
     "email": "dennis.stedema@bebovloeren.nl"
   },
-  "keywords": ["vault", "second-brain", "sharepoint", "onedrive", "notes"]
+  "keywords": [
+    "vault",
+    "second-brain",
+    "sharepoint",
+    "onedrive",
+    "trilium",
+    "notes"
+  ],
+  "userConfig": {
+    "vault": {
+      "type": "string",
+      "title": "Waar staat de vault",
+      "description": "sharepoint (standaard): de SharePoint-map, via OneDrive of de Microsoft 365-connector. trilium: Trilium Notes, via de ETAPI; is Trilium niet bereikbaar, dan valt het terug op SharePoint.",
+      "options": [
+        "sharepoint",
+        "trilium"
+      ],
+      "default": "sharepoint"
+    },
+    "trilium_url": {
+      "type": "string",
+      "title": "Trilium-adres",
+      "description": "Alleen voor trilium. Leeg: http://trilium.it.svc.cluster.local (binnen het cluster); daarbuiten het https-adres van je Trilium."
+    },
+    "trilium_token": {
+      "type": "string",
+      "title": "Trilium ETAPI-token",
+      "description": "Alleen voor trilium. Maak het in Trilium onder Opties → ETAPI.",
+      "sensitive": true
+    },
+    "notes_dir": {
+      "type": "string",
+      "title": "Notitie voor nieuwe notities",
+      "description": "Alleen voor trilium: nieuwe notities komen onder de notitie met deze titel in de root. Leeg: jarvis."
+    }
+  }
 }

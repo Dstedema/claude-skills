@@ -2,8 +2,9 @@
 name: sharepoint-vault
 description: >-
   Read and write Dennis' second brain / instruction vault directly in
-  SharePoint (Microsoft 365 connector), so the same vault is the source of
-  truth across every machine. Use this whenever the task involves the vault,
+  SharePoint (Microsoft 365 connector) or, when the plugin is set to it, in
+  Trilium Notes, so the same vault is the source of truth across every
+  machine. Use this whenever the task involves the vault,
   the "second brain", saving/recalling notes, project context, or standing
   instructions — instead of the local filesystem or the local memory MCP.
 ---
@@ -14,6 +15,38 @@ The vault is a tree of Markdown notes that lives in **SharePoint / OneDrive for
 Business** (tenant `bebovloeren.nl`), not on any single machine's local disk.
 Reading and writing it through the Microsoft 365 connector means the same
 second brain and standing instructions follow Dennis to every system.
+
+## SharePoint or Trilium
+
+The plugin has a setting **vault** (`/config`, or `claude plugin configure
+sharepoint-vault@jarvis`): `sharepoint` (the default) or `trilium`. The rule
+injected at session start says which one is in use; go by that.
+
+- **sharepoint** — everything below this section applies.
+- **trilium** — the vault is in Trilium Notes and nothing below about
+  SharePoint, OneDrive paths or the connector applies. Use this plugin's
+  trilium tools (deferred: load them with ToolSearch, query `trilium`):
+  - `search_notes` — Trilium search: keywords for full text, `"exact phrase"`,
+    `#label`; returns note ids and titles.
+  - `read_note` — one note's title, type and content (text notes are HTML).
+  - `create_note` — a new text note, as HTML; without `parentNoteId` it goes
+    under the note named by the setting **notes_dir** (default `jarvis`).
+  - `update_note` — replace a note's content and/or title. It replaces *all*
+    content, so read the note first. Trilium keeps a revision of every change.
+  Nothing can be deleted. The same structure holds, as notes instead of files:
+  a note `CLAUDE.md` with the standing instructions, per project an
+  `Index.md` and `architecture`, `Decisions`, `Mistakes` and `logs` notes with
+  their notes as children; a session log is a note titled
+  `YYYY-MM-DD-HHmm-<slug>` under the project's `logs`. The address and the
+  ETAPI token are the settings **trilium_url** and **trilium_token**.
+- **Trilium can't be reached** (the session-start rule says FALLBACK, or a
+  trilium tool says "niet bereikbaar"): use the SharePoint vault as below for
+  that session, and tell Dennis that what you read or wrote is in SharePoint,
+  not Trilium, so it can be moved over. When the tools say Trilium isn't set
+  up (no token), say so as well.
+
+When Claude runs inside JARVIS, JARVIS sets these options from its own
+Instellingen → Vault, and its system prompt says where the vault is.
 
 ## Where the vault lives
 
