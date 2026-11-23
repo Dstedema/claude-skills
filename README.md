@@ -17,8 +17,10 @@ machine from this repo; updates arrive via `git pull` + `/plugin update`.
   `trilium`: then the vault is Trilium Notes, reached through the plugin's own
   dependency-free MCP server (`mcp/trilium.mjs`, Trilium's ETAPI: search, read,
   create, update; nothing deletes), and the hooks and the skill point there.
-  When Trilium doesn't answer (checked at session start and after a commit, 3 s;
-  the tools say so too), that session falls back to SharePoint and says so.
+  When Trilium doesn't answer (checked at session start and after a commit, 8 s;
+  the tools wait up to 45 s and say so too), that session falls back to
+  SharePoint and says so. Trilium's certificate is never checked
+  (`hooks/trilium-http.js`): a self-signed one is fine.
   Set it once per machine in `/config` (or `/plugin configure
   sharepoint-vault@jarvis`): vault, `trilium_url`, `trilium_token` (kept in
   Claude Code's secure storage), `notes_dir`. Restart Claude Code after a change.

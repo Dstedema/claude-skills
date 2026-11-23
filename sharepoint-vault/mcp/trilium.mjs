@@ -24,6 +24,9 @@
  */
 
 import readline from "node:readline";
+import triliumHttp from "../hooks/trilium-http.js";
+
+const { triliumRequest } = triliumHttp;
 
 /** The ETAPI root from whatever address was filled in: with or without /etapi,
  *  or pasted from the browser (https://host/#root/abc). */
@@ -128,17 +131,17 @@ async function etapi(method, path, { json, text } = {}) {
   }
   let res;
   try {
-    res = await fetch(BASE + path, { method, headers, body, signal: AbortSignal.timeout(20_000) });
+    res = await triliumRequest(BASE + path, { method, headers, body, timeoutMs: 45_000 });
   } catch (err) {
     // Trilium itself is away: the vault falls back to SharePoint, as at session start.
     const cause = err?.cause ?? {};
-    const why = err?.name === "TimeoutError" ? "geen antwoord binnen 20 s" : cause.code || cause.errors?.[0]?.code || cause.message || err?.message;
+    const why = err?.name === "TimeoutError" ? "geen antwoord binnen 45 s" : cause.code || cause.errors?.[0]?.code || cause.message || err?.message;
     throw new Error(
       `Trilium is niet bereikbaar op ${BASE} (${why}). Val terug op de SharePoint-vault (de sharepoint-vault skill) ` +
         "en zeg erbij dat wat je las of schreef in SharePoint staat, niet in Trilium.",
     );
   }
-  const raw = await res.text();
+  const raw = res.text;
   if (!res.ok) {
     let message = raw.slice(0, 300);
     try {

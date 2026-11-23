@@ -1,7 +1,7 @@
 {
   "name": "sharepoint-vault",
   "description": "Read and write the second brain / instruction vault, so the same vault is the source of truth across every machine: in SharePoint (Windows + WSL via OneDrive sync, pure Linux/macOS via the Microsoft 365 connector) or, by choice, in Trilium Notes.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": {
     "name": "Dennis Stedema",
     "email": "dennis.stedema@bebovloeren.nl"

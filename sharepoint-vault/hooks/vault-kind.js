@@ -1,3 +1,5 @@
+const { triliumRequest } = require("./trilium-http.js");
+
 // The plugin's settings as hooks get them: Claude Code hands hooks every
 // option as CLAUDE_PLUGIN_OPTION_<KEY>. The vault choice comes from the option
 // only (unset means sharepoint, as in the MCP server, which gets the
@@ -29,15 +31,12 @@ function etapiBase(raw) {
 
 /**
  * Null when Trilium answers with this token, else why not, in a few words.
- * Short timeout: it runs at every session start.
+ * A short time limit (8 s): it runs at every session start.
  */
-async function triliumProblem({ url, token }, timeoutMs = 3000) {
+async function triliumProblem({ url, token }, timeoutMs = 8000) {
   if (!token) return "geen ETAPI-token ingesteld";
   try {
-    const res = await fetch(etapiBase(url) + "/app-info", {
-      headers: { Authorization: token },
-      signal: AbortSignal.timeout(timeoutMs),
-    });
+    const res = await triliumRequest(etapiBase(url) + "/app-info", { headers: { Authorization: token }, timeoutMs });
     if (res.ok) return null;
     return res.status === 401 ? "het ETAPI-token wordt geweigerd (401)" : `Trilium antwoordt met HTTP ${res.status}`;
   } catch (err) {
