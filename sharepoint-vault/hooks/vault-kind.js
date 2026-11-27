@@ -31,7 +31,14 @@ function etapiBase(raw) {
  * Null when Trilium answers with this token, else why not, in a few words.
  * Short timeout: it runs at every session start.
  */
+/** Plugin option trilium_insecure_tls: skip the certificate check in this hook process only. */
+function applyInsecureTls(env = process.env) {
+  const raw = (env.CLAUDE_PLUGIN_OPTION_TRILIUM_INSECURE_TLS || env.TRILIUM_INSECURE_TLS || "").trim();
+  if (/^(1|true|yes)$/i.test(raw)) env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
 async function triliumProblem({ url, token }, timeoutMs = 3000) {
+  applyInsecureTls();
   if (!token) return "geen ETAPI-token ingesteld";
   try {
     const res = await fetch(etapiBase(url) + "/app-info", {
