@@ -163,6 +163,22 @@ export class Bridge {
     }
   }
 
+  /** Folders of sessions whose channel went away without cleaning up (killed):
+   *  gone after a day without a heartbeat. */
+  sweepStale(maxAge = 24 * 3600 * 1000) {
+    for (const s of sorted(this.p.root)) {
+      if (!UUID.test(s) || s === this.session) continue;
+      const dir = path.join(this.p.root, s);
+      let at = 0;
+      try {
+        at = JSON.parse(readFileSync(path.join(dir, "alive.json"), "utf8")).at || 0;
+      } catch {
+        at = 0;
+      }
+      if (this.now() - at > maxAge) rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
   close() {
     if (this.dir) rmSync(this.dir, { recursive: true, force: true });
     this.dir = null;
@@ -242,6 +258,8 @@ function main() {
   process.stdin.on("end", stop);
   process.on("SIGTERM", stop);
   process.on("SIGINT", stop);
+  process.on("SIGHUP", stop); // tmux closing the window
+  process.stdout.on("error", stop); // claude went away
   if (!bridge) return;
 
   // The sessions file may appear a moment after we start; /clear changes it.
@@ -257,6 +275,7 @@ function main() {
   const early = setInterval(() => (bridge.session ? clearInterval(early) : find()), 1000);
   setInterval(() => bridge.pump(), 500);
   setInterval(() => bridge.sweep(), 60_000);
+  bridge.sweepStale();
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) main();

@@ -135,3 +135,17 @@ test("as a process: answers MCP, and without the channel flag makes no folder", 
   assert.equal(reply.result.serverInfo.name, "jarvis-bridge");
   assert.equal(existsSync(p.root), false);
 });
+
+test("a folder whose channel died without cleaning up goes after a day", () => {
+  const { p, ppid } = fake();
+  const now = Date.now();
+  const b = new Bridge(p, ppid, () => {}, () => now);
+  b.attach(SID);
+  for (const [sid, at] of [[SID2, now - 2 * 86400000], ["33333333-aaaa-4bbb-8ccc-000000000003", now - 3600000]]) {
+    mkdirSync(path.join(p.root, sid), { recursive: true });
+    writeFileSync(path.join(p.root, sid, "alive.json"), JSON.stringify({ at }));
+  }
+  mkdirSync(path.join(p.root, "not-a-session"));
+  b.sweepStale();
+  assert.deepEqual(readdirSync(p.root).sort(), [SID, "33333333-aaaa-4bbb-8ccc-000000000003", "not-a-session"]);
+});
