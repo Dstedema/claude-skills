@@ -1,0 +1,10 @@
+{
+  "name": "jarvis-bridge",
+  "description": "A channel between a Claude Code session on Dennis' dev machine and JARVIS: messages and screenshots from JARVIS go into the session, permission prompts can be answered from JARVIS. Only active when claude starts with this plugin as a channel.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Dennis Stedema",
+    "email": "dennis.stedema@bebovloeren.nl"
+  },
+  "keywords": ["jarvis", "channel", "remote", "mcp"]
+}
