@@ -28,6 +28,11 @@
       "name": "dagtaken",
       "source": "./dagtaken",
       "description": "Daily work helpers: Jira ticket triage (self-service in a Bebo app, rights requests, work for Dennis), inbox check with Outlook drafts, agenda check. Used by the JARVIS control room, works in plain Claude Code and Cowork too."
+    },
+    {
+      "name": "jarvis-bridge",
+      "source": "./jarvis-bridge",
+      "description": "A channel between Claude Code sessions on Dennis' dev machine and JARVIS: messages, screenshots and permission answers from JARVIS."
     }
   ]
 }
