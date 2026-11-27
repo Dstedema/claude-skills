@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -148,4 +148,45 @@ test("a folder whose channel died without cleaning up goes after a day", () => {
   mkdirSync(path.join(p.root, "not-a-session"));
   b.sweepStale();
   assert.deepEqual(readdirSync(p.root).sort(), [SID, "33333333-aaaa-4bbb-8ccc-000000000003", "not-a-session"]);
+});
+
+// ── review fixes ──
+
+test("a folder that disappeared is made again on the next beat, not a crash", () => {
+  const { p, ppid } = fake();
+  const b = new Bridge(p, ppid, () => {});
+  b.attach(SID);
+  rmSync(path.join(p.root, SID), { recursive: true, force: true });
+  b.beat();
+  assert.ok(existsSync(path.join(p.root, SID, "inbox")));
+  assert.ok(existsSync(path.join(p.root, SID, "alive.json")));
+});
+
+test("closing leaves a folder another channel took over (two terminals on one session)", () => {
+  const { p, ppid } = fake();
+  const b = new Bridge(p, ppid, () => {});
+  b.attach(SID);
+  writeFileSync(path.join(p.root, SID, "alive.json"), JSON.stringify({ pid: 999999, at: Date.now() }));
+  b.close();
+  assert.ok(existsSync(path.join(p.root, SID)), "the other one's");
+});
+
+test("odd upload names, a broken inbox file and a strange heartbeat are handled", () => {
+  const { p, ppid } = fake();
+  const sent = [];
+  const now = Date.now();
+  const b = new Bridge(p, ppid, (m) => sent.push(m), () => now);
+  b.attach(SID);
+  const dir = path.join(p.root, SID);
+  writeFileSync(path.join(dir, "inbox", "001.json"), JSON.stringify({ text: "x", upload: ".." }));
+  writeFileSync(path.join(dir, "inbox", "002.json"), "{broken");
+  const old = (now - 60_000) / 1000;
+  utimesSync(path.join(dir, "inbox", "002.json"), old, old);
+  b.pump();
+  assert.equal(sent[0].params.meta.file_path, undefined);
+  assert.deepEqual(readdirSync(path.join(dir, "inbox")), [], "a file still broken after a while is dropped");
+  mkdirSync(path.join(p.root, SID2));
+  writeFileSync(path.join(p.root, SID2, "alive.json"), JSON.stringify({ at: "nonsense" }));
+  b.sweepStale();
+  assert.equal(existsSync(path.join(p.root, SID2)), false);
 });

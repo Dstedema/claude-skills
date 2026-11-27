@@ -86,15 +86,27 @@ export class Bridge {
     if (session === this.session) return;
     const dir = path.join(this.p.root, session);
     mkdirSync(this.p.root, { recursive: true, mode: 0o700 });
-    if (this.dir && existsSync(this.dir) && !existsSync(dir)) renameSync(this.dir, dir);
+    if (this.dir && existsSync(this.dir) && !existsSync(dir)) {
+      try {
+        renameSync(this.dir, dir);
+      } catch {
+        // made fresh below
+      }
+    }
     for (const sub of ["", "inbox", "perms", "answers", "uploads"]) mkdirSync(path.join(dir, sub), { recursive: true, mode: 0o700 });
     this.session = session;
     this.dir = dir;
     this.beat();
   }
 
+  /** The folder and its parts, also when someone removed them meanwhile. */
+  ensure() {
+    for (const sub of ["", "inbox", "perms", "answers", "uploads"]) mkdirSync(path.join(this.dir, sub), { recursive: true, mode: 0o700 });
+  }
+
   beat() {
     if (!this.dir) return;
+    this.ensure();
     writeFileSync(path.join(this.dir, "alive.json"), JSON.stringify({ pid: process.pid, ppid: this.ppid, session: this.session, at: this.now() }), { mode: 0o600 });
   }
 
@@ -108,12 +120,18 @@ export class Bridge {
       try {
         msg = JSON.parse(readFileSync(file, "utf8"));
       } catch {
-        continue; // still being written: next round
+        // Still being written: next round. Still broken after 10 s: away.
+        try {
+          if (this.now() - statSync(file).mtimeMs > 10_000) unlinkSafe(file);
+        } catch {
+          // gone already
+        }
+        continue;
       }
       unlinkSafe(file);
       const text = typeof msg.text === "string" ? msg.text.slice(0, MAX_TEXT) : "";
       const meta = { from: "dennis" };
-      if (typeof msg.upload === "string" && /^[A-Za-z0-9._-]{1,120}$/.test(msg.upload)) {
+      if (typeof msg.upload === "string" && /^[A-Za-z0-9._-]{1,120}$/.test(msg.upload) && !msg.upload.startsWith(".")) {
         const up = path.join(this.dir, "uploads", msg.upload);
         if (existsSync(up)) meta.file_path = up;
       }
@@ -171,7 +189,8 @@ export class Bridge {
       const dir = path.join(this.p.root, s);
       let at = 0;
       try {
-        at = JSON.parse(readFileSync(path.join(dir, "alive.json"), "utf8")).at || 0;
+        const v = JSON.parse(readFileSync(path.join(dir, "alive.json"), "utf8")).at;
+        at = Number.isFinite(v) ? v : 0;
       } catch {
         at = 0;
       }
@@ -179,8 +198,18 @@ export class Bridge {
     }
   }
 
+  /** Remove the folder, unless another channel (a second terminal on the same
+   *  session) wrote the last heartbeat: then it is theirs now. */
   close() {
-    if (this.dir) rmSync(this.dir, { recursive: true, force: true });
+    if (this.dir) {
+      let owner = process.pid;
+      try {
+        owner = JSON.parse(readFileSync(path.join(this.dir, "alive.json"), "utf8")).pid;
+      } catch {
+        // no heartbeat: ours to remove
+      }
+      if (owner === process.pid) rmSync(this.dir, { recursive: true, force: true });
+    }
     this.dir = null;
   }
 }
@@ -267,15 +296,27 @@ function main() {
     const s = sessionOf(p, ppid);
     if (s) bridge.attach(s);
   };
-  find();
-  setInterval(() => {
-    find();
-    bridge.beat();
-  }, 10_000);
-  const early = setInterval(() => (bridge.session ? clearInterval(early) : find()), 1000);
-  setInterval(() => bridge.pump(), 500);
-  setInterval(() => bridge.sweep(), 60_000);
-  bridge.sweepStale();
+  // One failing round (a folder removed meanwhile, a full disk) must not end
+  // the channel: log it and try again next round.
+  const safe = (f) => () => {
+    try {
+      f();
+    } catch (err) {
+      log(`round failed: ${err.message}`);
+    }
+  };
+  safe(find)();
+  setInterval(
+    safe(() => {
+      find();
+      bridge.beat();
+    }),
+    10_000,
+  );
+  const early = setInterval(safe(() => (bridge.session ? clearInterval(early) : find())), 1000);
+  setInterval(safe(() => bridge.pump()), 500);
+  setInterval(safe(() => bridge.sweep()), 60_000);
+  safe(() => bridge.sweepStale())();
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) main();
